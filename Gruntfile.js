@@ -113,6 +113,7 @@ module.exports = function (grunt) {
           dot: true,
           src: [
             '.tmp',
+            'build',
             '<%= config.dist %>/*',
             '!<%= config.dist %>/.git*'
           ]
@@ -164,7 +165,9 @@ module.exports = function (grunt) {
     wiredep: {
       app: {
         ignorePath: /^\/|\.\.\//,
-        src: ['<%= config.app %>/index.html']
+        src: ['<%= config.app %>/index.html'],
+        exclude: [/ffmpeg/],
+        devDependencies: true
       }
     },
 
@@ -302,16 +305,51 @@ module.exports = function (grunt) {
         cwd: '<%= config.app %>/styles',
         dest: '.tmp/styles/',
         src: '{,*/}*.css'
+      },
+      worker: {
+        // src: 'bower_components/ffmpeg.js/build/ffmpeg.js',
+        src: 'bower_components/ffmpeg.js/build/ffmpeg-module.js',
+        dest: '.tmp/scripts/ffmpeg.js'
+      },
+      workerDist: {
+        files: [
+          {
+            src: 'bower_components/ffmpeg.js/build/ffmpeg-module.js',
+            dest: '<%= config.dist %>/scripts/ffmpeg.js'
+          },
+          {
+            src: '<%= config.app %>/scripts/worker.js',
+            dest: '<%= config.dist %>/scripts/worker.js'
+          }
+        ]
+      },
+      bower: {
+        files: [
+          {
+            src: '<%= config.dist %>/scripts/audio-compressor.js',
+            dest: 'build/audio-compressor.min.js'
+          },
+          {
+            src: '<%= config.app %>/scripts/audio-compressor.js',
+            dest: 'build/audio-compressor.js'
+          },
+          {
+            src: '<%= config.dist %>/scripts/worker.js',
+            dest: 'build/worker.js'
+          }
+        ]
       }
     },
 
     // Run some tasks in parallel to speed up build process
     concurrent: {
       server: [
-        'copy:styles'
+        'copy:styles',
+        'copy:worker'
       ],
       test: [
-        'copy:styles'
+        'copy:styles',
+        'copy:worker'
       ],
       dist: [
         'copy:styles',
@@ -370,9 +408,11 @@ module.exports = function (grunt) {
     'cssmin',
     'uglify',
     'copy:dist',
-    'rev',
+    // 'rev',
     'usemin',
-    'htmlmin'
+    'htmlmin',
+    'copy:workerDist',
+    'copy:bower'
   ]);
 
   grunt.registerTask('default', [

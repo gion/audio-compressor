@@ -1,6 +1,3 @@
-/*global importScripts:false,postMessage:false,self:false,ffmpeg_run:false */
-'use strict';
-
 // Simple ffmpeg web worker based on (https://github.com/bgrins/videoconverter.js/blob/master/demo/worker.js)
 
 // importScripts('bower_components/ffmpeg.js/build/ffmpeg-all-codecs.js');
@@ -22,9 +19,9 @@ function printErr(text) {
 
 self.addEventListener('message', function(event) {
   var message = event.data;
-  if (message.type === 'command') {
+  if (message.type === "command") {
     postMessage({
-      'type' : 'start'
+      'type' : 'start',
     });
 
     var Module = {
@@ -36,7 +33,7 @@ self.addEventListener('message', function(event) {
 
     postMessage({
       'type' : 'stdout',
-      'data' : 'Received command: ' + Module.arguments.join(' ')
+      'data' : 'Received command: ' + Module.arguments.join(" ")
     });
 
     var time = Date.now();

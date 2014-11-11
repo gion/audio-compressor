@@ -2,7 +2,7 @@
 <html class="no-js">
   <head>
     <meta charset="utf-8">
-    <title>audio compressor2</title>
+    <title>audio compressor</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
     <link rel="shortcut icon" href="/favicon.ico">
@@ -22,13 +22,10 @@
 
 
     <div class="hero-unit">
-      <h1>'Allo, 'Allo!</h1>
-      <p>You now have</p>
-      <ul>
-      <li>HTML5 Boilerplate</li>
-
-
-      </ul>
+      <h1>Upload an audio file!</h1>
+      <div><input type="file" id="file"/></div>
+      <div><p id="progress" class="hidden">converting, please be patient...<span>0</span>%</p></div>
+      <div><a id="download-link" href="#" class="hidden"></a></div>
     </div>
 
 
@@ -52,9 +49,6 @@
         <script src="scripts/audio-compressor.js"></script>
         <!-- endbuild -->
 
-        <!-- build:js({app,.tmp}) scripts/worker.js -->
-        <script src="scripts/worker.js"></script>
-        <!-- endbuild -->
 
         <!-- build:js({app,.tmp}) scripts/main.js -->
         <script src="scripts/main.js"></script>

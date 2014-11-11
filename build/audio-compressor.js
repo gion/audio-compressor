@@ -1,6 +1,6 @@
 'use strict';
 
-window.AudioCompresser = (function() {
+var AudioCompresser = (function() {
   var AudioCompresser = function AudioCompresser(fileName, fileBuffer) {
     this.worker = null;
     this.workerRunning = false;
@@ -56,7 +56,7 @@ window.AudioCompresser = (function() {
           args.push('wmav1');
           args.push(name + '.asf');
           break;
-      }
+      };
 
       return args;
     },
@@ -113,9 +113,14 @@ window.AudioCompresser = (function() {
     },
 
     trigger: function(eventName, data) {
+      var canContinue = true;
+
       if(this.events[eventName]) {
-        this.events[eventName].forEach(function(fn) {
+        this.events[eventName].forEach(function(fn, i) {
           fn({type:eventName, data: data}, data);
+          // if(canContinue) {
+          //  canContinue = fn({type:eventName, data: data}, data) !== false;
+          // }
         });
       }
 
@@ -132,9 +137,11 @@ window.AudioCompresser = (function() {
         ffmpegWorker = new Worker('scripts/worker.js');
 
       ffmpegWorker.addEventListener('message', function(event) {
+        // console.log(event);
         var message = event.data,
-            time,
-            progress;
+          canWeContinue = true,
+          time,
+          progress;
 
         self.trigger(message.type, message);
 
@@ -150,11 +157,13 @@ window.AudioCompresser = (function() {
             progress = Math.floor(time / duration * 100);
             self.trigger('progress', progress);
           }
-        } else if (message.type === 'done') {
+        } else if (message.type == 'done') {
           var code = message.data.code,
               outFileNames = Object.keys(message.data.outputFiles);
 
-          if (code === 0 && outFileNames.length) {
+          window.eee = event;
+
+          if (code == 0 && outFileNames.length) {
             var outFileName = outFileNames[0],
                 outFileBuffer = message.data.outputFiles[outFileName],
                 blob = new Blob([outFileBuffer], {type: self._getMimeType()}),
@@ -165,6 +174,10 @@ window.AudioCompresser = (function() {
                   blob: blob,
                   url: src
                 };
+
+            window.data= data;
+            console.log('#######', data);
+
             self.trigger('success', data);
 
           } else {
@@ -177,8 +190,8 @@ window.AudioCompresser = (function() {
   };
 
   function timeToSeconds(time) {
-    var parts = time.split(':');
-    return parseFloat(parts[0]) * 60 * 60 + parseFloat(parts[1]) * 60 + parseFloat(parts[2]) + parseFloat('0.' + parts[3]);
+    var parts = time.split(":");
+    return parseFloat(parts[0]) * 60 * 60 + parseFloat(parts[1]) * 60 + parseFloat(parts[2]) + parseFloat("0." + parts[3]);
   }
 
   return AudioCompresser;
