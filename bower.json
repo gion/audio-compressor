@@ -1,0 +1,23 @@
+{
+  "name": "audio-compressor",
+  "version": "0.0.1",
+  "homepage": "https://github.com/gion/audio-compressor",
+  "authors": [
+    "gion <bogdan.gradinariu@gmail.com>"
+  ],
+  "description": "a script to compress audio files within the browser",
+  "main": "scripts/audio-compressor.js",
+  "moduleType": [
+    "globals"
+  ],
+  "licence": "MIT",
+  "keywords": [
+    "audio",
+    "compress",
+    "ffmpeg"
+  ],
+  "private": false,
+  "dependencies": {
+    "ffmpeg.js": "~0.1.0"
+  }
+}
