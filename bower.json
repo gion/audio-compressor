@@ -6,7 +6,9 @@
     "gion <bogdan.gradinariu@gmail.com>"
   ],
   "description": "a script to compress audio files within the browser",
-  "main": "scripts/audio-compressor.js",
+  "main": [
+    "scripts/audio-compressor.js"
+  ],
   "moduleType": [
     "globals"
   ],
