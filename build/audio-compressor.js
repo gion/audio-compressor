@@ -17,6 +17,12 @@ window.AudioCompresser = (function() {
     _init: function(fileName, fileBuffer) {
       this.fileName = fileName;
       this.fileBuffer = fileBuffer;
+
+      var extension = this.fileName.replace(/^.*\./, '');
+      if(extension) {
+        this.format = extension.toLowerCase();
+      }
+
       this.initWorker();
 
       return this;

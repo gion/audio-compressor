@@ -1,4 +1,4 @@
-/*global AudioCompresser:false*/
+/*global AudioCompressor:false*/
 /*jshint undef:false, unused:false*/
 'use strict';
 (function() {
@@ -14,25 +14,30 @@
       // convert(file.name, e.target.result);
       // return;
 
-      var audioCompresser = new AudioCompresser(file.name, e.target.result);
-      audioCompresser
+      var audioCompressor = new AudioCompressor({
+        fileName: file.name,
+        fileBuffer: e.target.result,
+        format: 'mp3'
+      });
+
+      audioCompressor
         .on('ready', function(e) {
           $('#progress').removeClass('hidden');
         })
         .on('stdout', function(e) {
-          // console.log(e.data);
+          console.log(e.data);
         })
         .on('stderr', function(e) {
-          // console.warn(e.data);
+          console.warn(e.data);
         })
         .on('progress', function(e, p) {
           $('#progress span').text(p);
-          // console.log('progress: ', p, '%');
+          console.log('progress: ', p, '%');
         })
         // some kind of 'complete' event
         .on('done', function(e) {
           $('#progress').addClass('hidden');
-          // console.info('it is done!', e);
+          console.info('it is done!', e);
         })
         .on('success', function(e) {
           $('#download-link')
@@ -43,6 +48,19 @@
         })
         .on('fail', function(e) {
           console.error('fail', e);
+        })
+        .on('abort', function(e, data) {
+          console.error('aborted', data.message);
+
+          var fakeData = {
+            name: this.fileName,
+            buffer: this.fileBuffer,
+            blob: new Blob([this.fileBuffer], {type: this._getMimeType()})
+          };
+
+          fakeData.src = window.URL.createObjectURL(fakeData.blob);
+
+          this.trigger('success', fakeData).trigger('done');
         })
         // start the conversion
         .convert();
