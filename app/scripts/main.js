@@ -60,7 +60,9 @@
 
           fakeData.src = window.URL.createObjectURL(fakeData.blob);
 
-          this.trigger('success', fakeData).trigger('done');
+          this
+            .trigger('success', fakeData)
+            .trigger('done', fakeData);
         })
         // start the conversion
         .convert();
