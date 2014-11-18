@@ -1,26 +1,50 @@
 'use strict';
 
-window.AudioCompresser = (function() {
-  var AudioCompresser = function AudioCompresser(fileName, fileBuffer) {
+window.AudioCompressor = (function() {
+  var AudioCompressor = function AudioCompressor(options) {
     this.worker = null;
     this.workerRunning = false;
     this.fileName = null;
     this.fileBuffer = null;
-    this.bitRate = '96k';
-    this.format = 'mp3';
     this.events = {};
 
-    this._init(fileName, fileBuffer);
+    // default values
+
+    // the default bitRate
+    this.bitRate = 128;
+    // the default format
+    this.format = 'mp3';
+    this.workerPath = 'scripts/worker.js';
+
+    this._init(options);
   };
 
-  AudioCompresser.prototype = {
-    _init: function(fileName, fileBuffer) {
-      this.fileName = fileName;
-      this.fileBuffer = fileBuffer;
+  AudioCompressor.prototype = {
+    _init: function(options) {
 
-      var extension = this.fileName.replace(/^.*\./, '');
-      if(extension) {
-        this.format = extension.toLowerCase();
+      this.fileName = options.fileName;
+      this.fileBuffer = options.fileBuffer;
+
+      // if we do have specified a certain format,
+      // we might even do a conversion on top of the compression
+      if(options.format) {
+        this.format = options.format;
+      } else {
+        var extension = this.fileName.replace(/^.*\./, '');
+        if(extension) {
+          // do not convert the file
+          // retrieve the format from the extension
+          this.format = extension.toLowerCase();
+        }
+        // else... remains the default format stated in the constructor
+      }
+
+      if(options.bitRate) {
+        this.bitRate = options.bitRate;
+      }
+
+      if(options.workerPath) {
+        this.workerPath = options.workerPath;
       }
 
       this.initWorker();
@@ -36,7 +60,7 @@ window.AudioCompresser = (function() {
       args.push(this.fileName);
 
       args.push('-b:a');
-      args.push(this.bitRate);
+      args.push(this.bitRate + 'k');
 
       switch (this.format) {
         case 'mp3':
@@ -82,11 +106,18 @@ window.AudioCompresser = (function() {
       });
     },
 
+    cancel: function(message) {
+      this.worker.terminate();
+      this.trigger('abort', {
+        message: message || 'cancelled by the user'
+      });
+    },
+
     on: function(name, fn) {
       if(!this.events[name]) {
         this.events[name] = [];
       }
-      this.events[name].push(fn);
+      this.events[name].push(fn.bind(this));
 
       return this;
     },
@@ -135,7 +166,9 @@ window.AudioCompresser = (function() {
         durationRegexp = /Duration: (.*?), /,
         duration,
         timeRegexp = /time=(.*?) /,
-        ffmpegWorker = new Worker('scripts/worker.js');
+        bitRateRegexp = /bitrate:\s?(\d+)\s?kb\/s/,
+        bitRate,
+        ffmpegWorker = new Worker(this.workerPath);
 
       ffmpegWorker.addEventListener('message', function(event) {
         var message = event.data,
@@ -156,6 +189,19 @@ window.AudioCompresser = (function() {
             progress = Math.floor(time / duration * 100);
             self.trigger('progress', progress);
           }
+
+          if(!bitRate && bitRateRegexp.test(message.data)) {
+            bitRate = +bitRateRegexp.exec(message.data)[1];
+            // console.info(bitRate, bitRate <= self.bitRate ? '<=' : '>', self.bitRate);
+          }
+
+          // if we do have a valid bitrate response
+          // and it's lower than our targeted one,
+          // let's drop the compression, because it makes no sense
+          if(bitRate && bitRate <= self.bitRate) {
+            self.cancel('audio bitRate ('+ bitRate +'kb/s) is actually lower than (ot equal with) our target. No need for a compression.');
+          }
+
         } else if (message.type === 'done') {
           var code = message.data.code,
               outFileNames = Object.keys(message.data.outputFiles);
@@ -187,5 +233,5 @@ window.AudioCompresser = (function() {
     return parseFloat(parts[0]) * 60 * 60 + parseFloat(parts[1]) * 60 + parseFloat(parts[2]) + parseFloat('0.' + parts[3]);
   }
 
-  return AudioCompresser;
+  return AudioCompressor;
 })();
